@@ -1,0 +1,26 @@
+mehul@jarvis:~/smai_project$ python3 evaluate_clip.py
+Loading BioCLIP model for Zero-Shot Evaluation...
+
+--- Zero-Shot Evaluation: Mammals ---
+Resolving data files: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████| 13751/13751 [00:01<00:00, 7937.19it/s]
+Loaded 2751 test images across 45 classes.
+Evaluating mammals: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 86/86 [00:10<00:00,  8.32it/s]
+Zero-Shot Accuracy for mammals: 0.8146 (81.46%)
+
+--- Zero-Shot Evaluation: Birds ---
+Resolving data files: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8750/8750 [00:00<00:00, 36721.20it/s]
+Loaded 1750 test images across 25 classes.
+Evaluating birds: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 55/55 [00:27<00:00,  1.97it/s]
+Zero-Shot Accuracy for birds: 0.8971 (89.71%)
+
+--- Zero-Shot Evaluation: Butterfly ---
+Resolving data files: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4158/4158 [00:00<00:00, 5470.67it/s]
+Loaded 832 test images across 30 classes.
+Evaluating butterfly: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 26/26 [00:02<00:00, 10.20it/s]
+Zero-Shot Accuracy for butterfly: 0.5517 (55.17%)
+
+--- Zero-Shot Evaluation: Full Combined Dataset ---
+Total Combined Classes: 100
+Total Combined Test Images: 5333
+Evaluating Full Dataset: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 167/167 [00:25<00:00,  6.45it/s]
+Zero-Shot Accuracy for Full Combined Dataset: 0.8001 (80.01%)

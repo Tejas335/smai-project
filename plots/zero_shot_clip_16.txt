@@ -1,0 +1,28 @@
+mehul@jarvis:~/smai_project$ python3 evaluate_clip.py
+Loading Standard CLIP model for Zero-Shot Evaluation...
+/home/mehul/.local/lib/python3.10/site-packages/open_clip/factory.py:450: UserWarning: QuickGELU mismatch between final model config (quick_gelu=False) and pretrained tag 'openai' (quick_gelu=True).
+  warnings.warn(
+
+--- Zero-Shot Evaluation: Mammals ---
+Resolving data files: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████| 13751/13751 [00:01<00:00, 7600.34it/s]
+Loaded 2751 test images across 45 classes.
+Evaluating mammals: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 86/86 [00:11<00:00,  7.63it/s]
+Zero-Shot Accuracy for mammals: 0.9382 (93.82%)
+
+--- Zero-Shot Evaluation: Birds ---
+Resolving data files: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8750/8750 [00:00<00:00, 612547.32it/s]
+Loaded 1750 test images across 25 classes.
+Evaluating birds: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 55/55 [00:28<00:00,  1.91it/s]
+Zero-Shot Accuracy for birds: 0.8349 (83.49%)
+
+--- Zero-Shot Evaluation: Butterfly ---
+Resolving data files: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4158/4158 [00:00<00:00, 7913.30it/s]
+Loaded 832 test images across 30 classes.
+Evaluating butterfly: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 26/26 [00:02<00:00,  9.11it/s]
+Zero-Shot Accuracy for butterfly: 0.3942 (39.42%)
+
+--- Zero-Shot Evaluation: Full Combined Dataset ---
+Total Combined Classes: 100
+Total Combined Test Images: 5333
+Evaluating Full Dataset: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 167/167 [00:25<00:00,  6.47it/s]
+Zero-Shot Accuracy for Full Combined Dataset: 0.8114 (81.14%)

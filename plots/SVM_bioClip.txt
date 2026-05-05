@@ -1,0 +1,31 @@
+mehul@jarvis:~/smai_project$ python3 SVM.py
+
+Loading data for mammals...
+
+--- Evaluating SVM on mammals ---
+Training samples: 11000, Testing samples: 2751
+Training SVM... (this might take a moment)
+Predicting on test set...
+Accuracy for mammals: 0.9462 (94.62%)
+
+Loading data for birds...
+
+--- Evaluating SVM on birds ---
+Training samples: 7000, Testing samples: 1750
+Training SVM... (this might take a moment)
+Predicting on test set...
+Accuracy for birds: 0.9903 (99.03%)
+
+Loading data for butterfly...
+
+--- Evaluating SVM on butterfly ---
+Training samples: 3326, Testing samples: 832
+Training SVM... (this might take a moment)
+Predicting on test set...
+Accuracy for butterfly: 0.9808 (98.08%)
+
+--- Evaluating SVM on Full Combined Dataset ---
+Training samples: 21326, Testing samples: 5333
+Training SVM... (this might take a moment)
+Predicting on test set...
+Accuracy for Full Combined Dataset: 0.9661 (96.61%)
