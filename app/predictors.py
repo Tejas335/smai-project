@@ -78,17 +78,24 @@ _IMAGENET_STD  = [0.229, 0.224, 0.225]
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class CLIPPredictor:
-    """Zero-shot species classification using OpenAI CLIP ViT-B-16."""
+    """Zero-shot species classification using CLIP or BioCLIP."""
 
     def __init__(self, model_name="ViT-B-16", pretrained="openai"):
         import open_clip
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model, _, self.preprocess = open_clip.create_model_and_transforms(
-            model_name, pretrained=pretrained
-        )
+
+        # hf-hub models (e.g. BioCLIP) don't use a separate pretrained arg
+        if model_name.startswith("hf-hub:"):
+            self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name)
+            self.tokenizer = open_clip.get_tokenizer(model_name)
+        else:
+            self.model, _, self.preprocess = open_clip.create_model_and_transforms(
+                model_name, pretrained=pretrained
+            )
+            self.tokenizer = open_clip.get_tokenizer(model_name)
+
         self.model = self.model.to(self.device).eval()
-        self.tokenizer = open_clip.get_tokenizer(model_name)
 
         # Pre-compute text embeddings for all 100 species
         prompts = [f"a photo of a {name}" for name in ORDERED_CLASS_NAMES]
@@ -134,6 +141,154 @@ class CLIPPredictor:
             "group_probs": group_probs,
             "species": species,
             "species_confidence": round(similarity[top_idx].item() * 100, 2),
+            "top3_species": top3_species,
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 1b. CLIP + KNN Predictor
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _parse_label(label):
+    """Parse 'category_species' label → (group, species_name)."""
+    group, species = label.split("_", 1)
+    return group, species
+
+
+class CLIPKNNPredictor:
+    """Classifies by encoding the image with CLIP then running KNN on embeddings."""
+
+    def __init__(self, model_name="ViT-B-16", pretrained="openai", knn_model_path=""):
+        import open_clip
+        import joblib
+
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # Load CLIP encoder
+        if model_name.startswith("hf-hub:"):
+            self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name)
+        else:
+            self.model, _, self.preprocess = open_clip.create_model_and_transforms(
+                model_name, pretrained=pretrained
+            )
+        self.model = self.model.to(self.device).eval()
+
+        # Load pre-trained KNN
+        self.knn = joblib.load(knn_model_path)
+
+    @torch.no_grad()
+    def predict(self, image: Image.Image) -> dict:
+        import numpy as np
+
+        img_tensor = self.preprocess(image.convert("RGB")).unsqueeze(0).to(self.device)
+        features = self.model.encode_image(img_tensor)
+        features = features / features.norm(dim=-1, keepdim=True)
+        feat_np = features.cpu().numpy()
+
+        # KNN prediction + probabilities
+        pred_label = self.knn.predict(feat_np)[0]
+        proba = self.knn.predict_proba(feat_np)[0]
+        classes = self.knn.classes_
+
+        group, species = _parse_label(pred_label)
+
+        # Group probabilities
+        group_probs = {"birds": 0.0, "butterfly": 0.0, "mammals": 0.0}
+        for cls, prob in zip(classes, proba):
+            g, _ = _parse_label(cls)
+            if g in group_probs:
+                group_probs[g] += prob
+        group_probs = {k: round(v * 100, 2) for k, v in group_probs.items()}
+
+        # Top 5 species
+        sorted_idx = np.argsort(proba)[::-1][:5]
+        top3_species = [
+            {
+                "species": _parse_label(classes[i])[1],
+                "confidence": round(proba[i] * 100, 2),
+            }
+            for i in sorted_idx
+        ]
+
+        pred_conf = round(proba[list(classes).index(pred_label)] * 100, 2)
+
+        return {
+            "group": group,
+            "group_confidence": group_probs.get(group, 0.0),
+            "group_probs": group_probs,
+            "species": species,
+            "species_confidence": pred_conf,
+            "top3_species": top3_species,
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 1c. CLIP + SVM Predictor
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class CLIPSVMPredictor:
+    """Classifies by encoding the image with CLIP then running a linear SVM."""
+
+    def __init__(self, model_name="ViT-B-16", pretrained="openai", svm_model_path=""):
+        import open_clip
+        import joblib
+
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # Load CLIP encoder
+        if model_name.startswith("hf-hub:"):
+            self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name)
+        else:
+            self.model, _, self.preprocess = open_clip.create_model_and_transforms(
+                model_name, pretrained=pretrained
+            )
+        self.model = self.model.to(self.device).eval()
+
+        # Load pre-trained SVM
+        self.svm = joblib.load(svm_model_path)
+
+    @torch.no_grad()
+    def predict(self, image: Image.Image) -> dict:
+        import numpy as np
+
+        img_tensor = self.preprocess(image.convert("RGB")).unsqueeze(0).to(self.device)
+        features = self.model.encode_image(img_tensor)
+        features = features / features.norm(dim=-1, keepdim=True)
+        feat_np = features.cpu().numpy()
+
+        # SVM prediction + probabilities
+        pred_label = self.svm.predict(feat_np)[0]
+        proba = self.svm.predict_proba(feat_np)[0]
+        classes = self.svm.classes_
+
+        group, species = _parse_label(pred_label)
+
+        # Group probabilities
+        group_probs = {"birds": 0.0, "butterfly": 0.0, "mammals": 0.0}
+        for cls, prob in zip(classes, proba):
+            g, _ = _parse_label(cls)
+            if g in group_probs:
+                group_probs[g] += prob
+        group_probs = {k: round(v * 100, 2) for k, v in group_probs.items()}
+
+        # Top 5 species
+        sorted_idx = np.argsort(proba)[::-1][:5]
+        top3_species = [
+            {
+                "species": _parse_label(classes[i])[1],
+                "confidence": round(proba[i] * 100, 2),
+            }
+            for i in sorted_idx
+        ]
+
+        pred_conf = round(proba[list(classes).index(pred_label)] * 100, 2)
+
+        return {
+            "group": group,
+            "group_confidence": group_probs.get(group, 0.0),
+            "group_probs": group_probs,
+            "species": species,
+            "species_confidence": pred_conf,
             "top3_species": top3_species,
         }
 
