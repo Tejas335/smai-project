@@ -245,7 +245,6 @@ We built a Streamlit web application that allows users to upload an image and ge
 - **Butterfly discrimination** remains the weakest link across all methods, particularly for zero-shot CLIP.
 - **Seal and blue whale** show the lowest per-class F1 scores (seal: 0.828, blue whale: 0.840) among mammals, likely due to visual similarity with sea lions and lack of close-up distinguishing features respectively.
 - **Small test set per class** (~26 samples average) means per-class metrics have high variance.
-- **No augmentation ablation** was performed; strategies like mixup or stronger color jitter may further improve robustness.
 
 ---
 
